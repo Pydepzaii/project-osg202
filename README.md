@@ -1,9 +1,6 @@
 
 # Cách dùng file project gameOSG
 
-A brief description of what this project does and who it's for
-
-
 ## 1. Cách thiết lập môi trường code:
 
 Sử dụng VS code đã cài môi trường lập trình C:

@@ -1,3 +1,4 @@
+// FILE: src/player.c
 #include "player.h"
 #include "settings.h"
 
@@ -49,14 +50,19 @@ bool CheckCollisionFuture(Rectangle hitbox, GameMap *map, Npc *npcList, int npcC
             float npcW = (float)npcList[i].texture.width / npcList[i].frameCount;
             float npcH = (float)npcList[i].texture.height;
 
-            // --- [FIX] CHỈ LẤY PHẦN CHÂN NPC ĐỂ VA CHẠM ---
-            float feetHeight = 20.0f; // Độ cao vùng chân
+            // --- [FIX] CHỈNH HITBOX NPC NHỎ GỌN & CĂN GIỮA ---
+            float boxWidth = 24.0f;   // Chiều ngang giữ nguyên
+            float boxHeight = 10.0f;  // [QUAN TRỌNG] Chiều cao giảm xuống (ép dẹt)
+            float paddingBottom = 17.0f; // Kéo hitbox lên cao 4px so với đáy ảnh
             
+            // Công thức căn giữa: (Rộng ảnh - Rộng hộp) / 2
+            float offsetX = (npcW - boxWidth) / 2.0f; 
+
             Rectangle npcFeetRect = { 
-                npcList[i].position.x + 15,            // Thu hẹp 2 bên hông (tránh mắc kẹt)
-                npcList[i].position.y + npcH - feetHeight, // Đẩy xuống đáy
-                npcW - 30,                             // Chiều rộng nhỏ hơn ảnh thật
-                feetHeight                             // Chiều cao ngắn
+                npcList[i].position.x + offsetX,            
+                npcList[i].position.y + npcH - boxWidth - paddingBottom, 
+               boxWidth,  // <--- Dòng này trước đây là boxSize, phải sửa thành boxWidth
+                boxHeight                            
             };
 
             if (CheckCollisionRecs(hitbox, npcFeetRect)) return true;
@@ -104,30 +110,26 @@ void UpdatePlayer(Player *player, GameMap *map, Npc *npcList, int npcCount) {
 
     // 1. Kiểm tra trục X
     Rectangle boxX = { 
-        nextPos.x + 15,                 // Thu hẹp biên trái 15px
-        player->position.y + pH - pFeetH, // Y giữ nguyên (lấy chân hiện tại)
-        pW - 30,                        // Chiều rộng hẹp hơn ảnh
-        pFeetH                          // Chiều cao ngắn
+        nextPos.x + 15,                 
+        player->position.y + pH - pFeetH, 
+        pW - 30,                        
+        pFeetH                          
     };
     
     bool colX = CheckCollisionFuture(boxX, map, npcList, npcCount);
-    // Giới hạn màn hình
     if (nextPos.x < -10 || nextPos.x > SCREEN_WIDTH - pW + 10) colX = true;
-    
     if (!colX) player->position.x = nextPos.x; 
 
     // 2. Kiểm tra trục Y
     Rectangle boxY = { 
         player->position.x + 15, 
-        nextPos.y + pH - pFeetH,      // Y thay đổi (dự kiến bước tới)
+        nextPos.y + pH - pFeetH,      
         pW - 30, 
         pFeetH 
     };
 
     bool colY = CheckCollisionFuture(boxY, map, npcList, npcCount);
-    // Giới hạn màn hình
     if (nextPos.y < -10 || nextPos.y > SCREEN_HEIGHT - pH + 10) colY = true;
-    
     if (!colY) player->position.y = nextPos.y;
 
     // --- XỬ LÝ ANIMATION ---
@@ -153,14 +155,8 @@ void UpdatePlayer(Player *player, GameMap *map, Npc *npcList, int npcCount) {
 }
 
 void DrawPlayer(Player *player) {
-    // Vẽ nhân vật
     DrawTextureRec(player->texture, player->frameRec, player->position, WHITE);
     
-    // DEBUG: Bỏ comment dòng dưới để nhìn thấy hitbox chân màu đỏ (nếu cần test)
-    // float pFeetH = 20.0f;
-    // DrawRectangleLines(player->position.x + 15, player->position.y + player->spriteHeight - pFeetH, player->spriteWidth - 30, pFeetH, RED);
-
-    // Vẽ thanh máu
     int barWidth = 40;
     int barHeight = 5;
     int barX = (int)(player->position.x + (player->spriteWidth / 2.0f) - (barWidth / 2.0f));

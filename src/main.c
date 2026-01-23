@@ -6,6 +6,7 @@
 #include "npc.h"
 #include "debug.h" 
 #include "renderer.h" 
+#include "interact.h"
 #include <stdio.h> 
 
 int main() {
@@ -53,7 +54,8 @@ int main() {
                 UpdateNpc(&npcList[i]);
             }
         }
-
+      // [MỚI] 2. Gọi hàm xử lý logic tương tác (Check phím E)
+        Interact_Update(&mainCharacter, npcList, npcCount);
         // --- PHẦN VẼ (DRAW) ---
         BeginDrawing();
             ClearBackground(RAYWHITE); 
@@ -73,7 +75,8 @@ int main() {
                 Render_AddProp(&cotNha);
             }
             Render_DrawAll();
-
+  // [MỚI] 3. Gọi hàm vẽ giao diện hội thoại & nút nhắc nhở [E]
+            Interact_DrawUI(&mainCharacter, npcList, npcCount);
             // LỚP 3: Debug & UI (Luôn nằm trên cùng)
             // [CẬP NHẬT] Truyền thêm mainCharacter và npcList vào đây
             Debug_UpdateAndDraw(&currentMap, &mainCharacter, npcList, npcCount); 

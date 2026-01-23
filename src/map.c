@@ -17,8 +17,12 @@ void LoadMap(GameMap *map, int mapID) {
             
             // --- KHU VỰC ĐẶT TƯỜNG ---
             // Paste code bạn copy từ Terminal vào đây:
+<<<<<<< Updated upstream
             map->walls[map->wallCount++] = (Rectangle){ 183, 204, 94, 40 };
             map->walls[map->wallCount++] = (Rectangle){ 168, 314, 154, 36 };
+=======
+            map->walls[map->wallCount++] = (Rectangle){ 472, 113, 189, 118 };
+>>>>>>> Stashed changes
             break;
 
         case MAP_NHA_AN:

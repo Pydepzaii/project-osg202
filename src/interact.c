@@ -1,97 +1,108 @@
 // FILE: src/interact.c
 #include "interact.h"
-#include "raymath.h" // Thư viện toán học để tính khoảng cách (Vector2Distance)
-#include <stddef.h>
+#include "raymath.h" 
+#include "ui_style.h" 
+#include "settings.h" // Cần để dùng MAP_ID
+#include "dialog_system.h"
+#include "transition.h"
+#include <string.h>
 
-// Hàm nội bộ: Tìm NPC gần nhất trong phạm vi tương tác
-// Trả về: Con trỏ tới NPC gần nhất, hoặc NULL nếu không có ai
-static Npc* GetClosestNpc(Player *player, Npc *npcList, int npcCount) {
-    Npc *closest = NULL;
-    float minDistance = INTERACT_DISTANCE;
+// [MỚI] Tọa độ cửa (Lấy từ code Dev)
+// [CẦN CHÚ Ý]: Các biến này đang Hard-code (gán cứng). Nếu bạn thay đổi Map, nhớ vào đây sửa tọa độ cửa.
+static Vector2 exitToBlack = { 100.0f, 350.0f };
+static Vector2 exitToWhite = { 700.0f, 350.0f };
 
-    for (int i = 0; i < npcCount; i++) {
-        // Chỉ xét NPC đang ở cùng Map với Player (quan trọng!)
-        // Lưu ý: Chúng ta cần đảm bảo logic mapID được xử lý đúng từ main truyền vào
-        // Tạm thời tính toán khoảng cách thuần túy
-        
-        float dist = Vector2Distance(player->position, npcList[i].position);
-        
-        if (dist < minDistance) {
-            minDistance = dist;
-            closest = &npcList[i];
+// [MỚI] Hàm logic kiểm tra cửa
+void Interact_CheckExits(Player *player, GameMap *map) {
+    if (map->currentMapID == MAP_THU_VIEN) {
+        // Cửa sang Map Đen
+        // [GIẢI THÍCH]: Dùng Vector2Distance để tính khoảng cách giữa người chơi và cái cửa.
+        if (Vector2Distance(player->position, exitToBlack) < INTERACT_DISTANCE) {
+            if (IsKeyPressed(KEY_E)) {
+                Transition_StartToMap(MAP_TRANG, (Vector2){ 400, 200 });
+            }
         }
-    }
-    return closest;
-}
-
-void Interact_Update(Player *player, Npc *npcList, int npcCount) {
-    // 1. Tìm xem có NPC nào đứng gần không
-    Npc *targetNpc = GetClosestNpc(player, npcList, npcCount);
-
-    // 2. Nếu có NPC gần
-    if (targetNpc != NULL) {
-        // Kiểm tra phím E
-        if (IsKeyPressed(KEY_E)) {
-            // Đảo ngược trạng thái nói chuyện (Bật -> Tắt, Tắt -> Bật)
-            targetNpc->isTalking = !targetNpc->isTalking;
-        }
-    } 
-    
-    // 3. Logic phụ: Nếu đi ra xa quá thì tự động tắt hội thoại
-    for (int i = 0; i < npcCount; i++) {
-        if (npcList[i].isTalking) {
-            float dist = Vector2Distance(player->position, npcList[i].position);
-            if (dist > INTERACT_DISTANCE * 1.5f) { // Cho phép đi xa hơn một chút rồi mới tắt
-                npcList[i].isTalking = false;
+        // Cửa sang Map Trắng
+        if (Vector2Distance(player->position, exitToWhite) < INTERACT_DISTANCE) {
+            if (Transition_IsActive()) return;
+            if (IsKeyPressed(KEY_E)) {
+                Transition_StartToMap(MAP_DEN, (Vector2){ 400, 200 });
             }
         }
     }
+    // Nếu đang ở map phụ thì bấm E để về lại Thư Viện
+    else if (map->currentMapID == MAP_DEN || map->currentMapID == MAP_TRANG) {
+         if (IsKeyPressed(KEY_E)) {
+            Transition_StartToMap(MAP_THU_VIEN, (Vector2){ 400, 250 });
+         }
+    }
 }
 
-void Interact_DrawUI(Player *player, Npc *npcList, int npcCount) {
-    // Duyệt qua tất cả NPC để vẽ UI
+void Interact_Update(Player *player, Npc *npcList, int npcCount, GameMap *map) {
     for (int i = 0; i < npcCount; i++) {
-        // Lấy khoảng cách
-        float dist = Vector2Distance(player->position, npcList[i].position);
+        // [ĐÃ SỬA] Logic Map Checking hoạt động
+        // [GIẢI THÍCH]: Chỉ xử lý NPC ở cùng map với người chơi. NPC ở map khác sẽ bị bỏ qua.
+        if (npcList[i].mapID != map->currentMapID) continue;
 
-        // CASE 1: Đứng gần nhưng chưa nói chuyện -> Hiện gợi ý "[E]"
-        if (dist < INTERACT_DISTANCE && !npcList[i].isTalking) {
-            Vector2 screenPos = npcList[i].position;
-            // Vẽ dòng chữ nảy nảy một chút cho sinh động
-            float bounce = sinf((float)GetTime() * 5.0f) * 3.0f; 
-            
-            DrawText("[E] Noi chuyen", (int)screenPos.x - 20, (int)screenPos.y - 30 + (int)bounce, 20, YELLOW);
+        // Logic khoảng cách (Giữ nguyên code của bạn)
+        float distance = Vector2Distance(player->position, npcList[i].position);
+
+        if (distance < INTERACT_DISTANCE) {
+            if (IsKeyPressed(KEY_E)) {
+                npcList[i].isTalking = !npcList[i].isTalking;
+                // [MỚI] KHI BẮT ĐẦU NÓI, LẤY DỮ LIỆU TỪ FILE TXT
+                if (npcList[i].isTalking) {
+                    const char* text = Dialog_Get(npcList[i].mapID, npcList[i].id, npcList[i].dialogKey);
+                    strcpy(npcList[i].currentText, text); // Copy vào biến hiển thị của NPC
+                }
+            }
+        } else {
+            // [GIẢI THÍCH]: Nếu đi ra xa quá, hộp thoại tự đóng.
+            npcList[i].isTalking = false;
+        }
+    }
+    
+    // [MỚI] Gọi hàm kiểm tra cửa
+    Interact_CheckExits(player, map);
+}
+
+void Interact_DrawUI(Player *player, Npc *npcList, int npcCount, GameMap *map) {
+    // 1. UI NPC (Code đẹp của bạn + Logic lọc map của Dev)
+    for (int i = 0; i < npcCount; i++) {
+        // Chỉ vẽ NPC đang ở cùng map
+        if (npcList[i].mapID != map->currentMapID) continue;
+
+        float distance = Vector2Distance(player->position, npcList[i].position);
+
+        // UI: Gợi ý nút bấm (Hiện chữ [E] trên đầu NPC)
+        if (distance < INTERACT_DISTANCE && !npcList[i].isTalking) {
+            Vector2 textPos = { npcList[i].position.x - 10, npcList[i].position.y - 40 };
+            DrawTextEx(globalFont, "[E] Noi chuyen", textPos, 24, 1, YELLOW);
         }
 
-        // CASE 2: Đang trong trạng thái hội thoại -> Vẽ Hộp Thoại (Dialog Box)
+        // UI: Hộp thoại (Giữ nguyên thiết kế đẹp của bạn)
         if (npcList[i].isTalking) {
-            // Cấu hình hộp thoại
-            int screenW = GetScreenWidth();
-            int screenH = GetScreenHeight();
-            float boxHeight = 120;
-            float margin = 20;
-
-            Rectangle boxRec = { 
-                margin, 
-                screenH - boxHeight - margin, 
-                screenW - (margin * 2), 
-                boxHeight 
-            };
-
-            // 1. Vẽ nền hộp thoại (Màu đen trong suốt)
-            DrawRectangleRec(boxRec, Fade(BLACK, 0.8f));
+            Rectangle boxRec = { 100, 300, 600, 120 };
             
-            // 2. Vẽ viền trắng
-            DrawRectangleLinesEx(boxRec, 3.0f, WHITE);
+            DrawRectangleRec(boxRec, Fade(BLACK, 0.8f));
+            DrawRectangleLinesEx(boxRec, 2, WHITE);
 
-            // 3. Vẽ Tên NPC (Màu vàng)
-            DrawText(npcList[i].name, (int)boxRec.x + 20, (int)boxRec.y + 15, 20, YELLOW);
-
-            // 4. Vẽ Nội dung hội thoại (Màu trắng)
-            DrawText(npcList[i].dialog, (int)boxRec.x + 20, (int)boxRec.y + 50, 20, WHITE);
-
-            // 5. Hướng dẫn đóng
-            DrawText("[E] Dong", (int)boxRec.x + boxRec.width - 100, (int)boxRec.y + boxRec.height - 25, 15, GRAY);
+            DrawTextEx(globalFont, npcList[i].name, (Vector2){ boxRec.x + 20, boxRec.y + 10 }, 28, 1, YELLOW);
+            DrawTextEx(globalFont, npcList[i].currentText, (Vector2){ boxRec.x + 20, boxRec.y + 45 }, 24, 1, WHITE);
+            DrawTextEx(globalFont, "Bam [E] de dong", (Vector2){ boxRec.x + 450, boxRec.y + 90 }, 18, 1, LIGHTGRAY);
         }
+    }
+
+    // 2. [MỚI] UI Cửa ra vào (Thêm vào để người chơi biết chỗ nào có cửa)
+    if (map->currentMapID == MAP_THU_VIEN) {
+        if (Vector2Distance(player->position, exitToBlack) < INTERACT_DISTANCE) {
+            DrawTextEx(globalFont, "[E] Vao Phong Den", (Vector2){exitToBlack.x - 40, exitToBlack.y - 40}, 24, 1, GREEN);
+        }
+        if (Vector2Distance(player->position, exitToWhite) < INTERACT_DISTANCE) {
+            DrawTextEx(globalFont, "[E] Vao Phong Trang", (Vector2){exitToWhite.x - 40, exitToWhite.y - 40}, 24, 1, GREEN);
+        }   
+    }
+    else if (map->currentMapID == MAP_DEN || map->currentMapID == MAP_TRANG) {
+        DrawTextEx(globalFont, "[E] Ve Thu Vien", (Vector2){10, 10}, 24, 1, GREEN);
     }
 }

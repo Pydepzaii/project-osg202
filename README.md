@@ -46,10 +46,6 @@ thấy hiện xx.xx.xx là ok còn chưa ra thì lên AI hỏi cách cài. phiê
 
 **B5: tạo 1 file `helloworld.c` và test nếu chạy dc là ok.**
 
-### Cách dùng AI đúng cách:
-+ Trước khi nhờ AI code hãy copy hàng loạt thư mục trong resources và src và .vscode ném lên AI (khuyên dùng gemini vì tải được nhiều file 1 lúc nếu có free 1 năm)
-+ Khi code xong dù bằng tay hay AI cũng nhớ ghi chú để có lỗi biết chỗ mà fix
-+ Nhớ clone ra máy rồi chạy không được làm trên file github chạy ok báo cáo rồi mới up lên
 
 
 ## 2. Cấu trúc chương trình cơ bản
@@ -87,7 +83,32 @@ thấy hiện xx.xx.xx là ok còn chưa ra thì lên AI hỏi cách cài. phiê
 
 ### c. Cho a Trung khi review code và merge vào main
 
-
-
+## 4. Update note
+### Ver 0.0.1
+**Thiết lập khung chương trình cơ bản.
+**Thêm bản đô "thư viện" thử nghiệm.
+**Thêm hệ thống tương tác npc.
+^^Thêm tool lấy tọa độ bằng kéo thả chuột hỗ trợ dev game.
+### Ver 0.0.2
+**Thêm intro logo nhóm khi chạy game
+**Thêm font "roboto" hỗ trợ thoại và giao diện tiếng việt
+### Ver 0.0.3
+**Update debug menu giờ đây đã hỗ trợ cho lấy tọa độ menu UI
+**Thêm title screen cơ bản
+**Thêm nút thoát game và fix 1 số lỗi
+### BIGUPDATE Ver 0.0.4
+**Đa thêm font tiếng việt chuẩn và ổn định
+**Đã thêm tính năng toàn màn hình hoạt động ổn định với scale 100%
+**Đã thêm logic chuẩn map dùng cho tương lai
+**Đã thêm model đọc file viết thoại hỗ trợ artteam viết thoại
+**Debug on map và on menu đã hoạt động tốt trên chế độ window(không mở fullscreen để dubug vì fullscreen là vẽ lên màn hình ảo nên tọa độ lấy được có thể sai lệch vấn đề này sẽ update lại tool sau)
+**Để test chuẩn map đến vùng exit của thư viện sau đó nhấn "E" muốn về thư viện nhấn "E" lần nữa
+### BIGUPDATE ver 0.0.5
+**Thêm menu setting cho phép chỉnh master volume và chuyển chế độ window, fullscreen
+**Thêm nhạc nền test cho tilte screen và map test
+**Thêm animation chuyển cảnh game
+**Thêm camera zoom kéo theo nhân vật(bấm y để về chế độ toàn bản đồ chỉ dành cho debug và tester)
+**Nâng cấp tool lấy tọa độ giờ đây đã hoạt động tốt trên cả chế độ toàn màn hình và chế độ cửa sổ
+**Sửa lỗi màn hình trên cấc máy thiết lập scale>100%
 
 
